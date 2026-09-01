@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "tsx --env-file=.env src/cli/run.ts",
     "seed": "tsx --env-file=.env src/cli/run.ts --seed",
+    "seed:applicant": "tsx --env-file=.env scripts/seed-applicant.ts",
     "demo:reset": "tsx --env-file=.env scripts/demo-seed.ts --reset",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --test --import tsx test/*.test.ts"
