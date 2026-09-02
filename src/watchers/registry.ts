@@ -1,6 +1,7 @@
+import path from "node:path"
 import { getSolari } from "../solari/client.ts"
 import { ensureProfile } from "../solari/profiles.ts"
-import { extractListing } from "../extraction/extractor.ts"
+import { extractListing, type ListingData } from "../extraction/extractor.ts"
 import { scoreListing } from "../extraction/scorer.ts"
 import { hasSeenListing, markSeen, insertListing } from "../db/repositories/listings.ts"
 import { listActiveSearches } from "../db/repositories/searches.ts"
@@ -47,13 +48,14 @@ export async function runPollCycle(source: SourceConfig): Promise<void> {
       })
 
       if (accepted && extracted.hasOnlineApplication && extracted.applyUrl) {
-        await prepareApplication(listingId, extracted.applyUrl)
+        await prepareApplication(listingId, extracted)
       }
     }
   }
 }
 
-async function prepareApplication(listingId: string, applyUrl: string): Promise<void> {
+async function prepareApplication(listingId: string, listing: ListingData): Promise<void> {
+  const applyUrl = listing.applyUrl!
   const solari = await getSolari()
   let applicantProfile = getApplicantProfile()
   if (!applicantProfile) {
@@ -89,8 +91,13 @@ async function prepareApplication(listingId: string, applyUrl: string): Promise<
       type: "application.prepared",
       applicationId,
       listingId,
+      price: listing.price,
+      beds: listing.beds,
+      distanceMinutes: listing.distanceMinutes,
+      addressText: listing.addressText,
+      amenities: listing.amenities,
       missingFields: result.missingFields,
-      screenshotPath: result.screenshotPath,
+      screenshotUrl: result.screenshotPath ? `/screenshots/${path.basename(result.screenshotPath)}` : null,
       solariSessionId: result.sessionId,
     })
   } catch (err) {

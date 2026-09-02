@@ -38,6 +38,20 @@ export function markFailed(applicationId: string, error: string): void {
   db.prepare(`UPDATE applications SET status = 'failed', error = ? WHERE id = ?`).run(error, applicationId)
 }
 
-export function getApplication(applicationId: string): any {
-  return db.prepare(`SELECT * FROM applications WHERE id = ?`).get(applicationId)
+export interface ApplicationRow {
+  id: string
+  listingId: string
+  status: string
+  missingFields: string[]
+}
+
+export function getApplication(applicationId: string): ApplicationRow | null {
+  const row = db.prepare(`SELECT * FROM applications WHERE id = ?`).get(applicationId) as any
+  if (!row) return null
+  return {
+    id: row.id,
+    listingId: row.listing_id,
+    status: row.status,
+    missingFields: JSON.parse(row.missing_fields_json ?? "[]"),
+  }
 }

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apartment Lightning</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>⚡ Apartment Lightning</h1>
+    <p class="tagline">The agent that never misses a new apartment.</p>
+  </header>
+
+  <form id="chat-form">
+    <input id="chat-input" type="text" autocomplete="off"
+      placeholder="Find me 1-bedroom apartments under $1,600 within 30 minutes of downtown Austin. I need parking and allow cats." />
+    <button type="submit">Start watching</button>
+  </form>
+  <p id="chat-status"></p>
+
+  <button id="trigger-demo" type="button">⚡ Trigger a new listing (demo)</button>
+
+  <section id="feed" aria-label="Matches"></section>
+
+  <details id="activity">
+    <summary>Activity log</summary>
+    <ul id="activity-log"></ul>
+  </details>
+
+  <script src="/app.js"></script>
+</body>
+</html>

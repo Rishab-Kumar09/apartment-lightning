@@ -12,8 +12,13 @@ export interface ApplicationPreparedEvent {
   type: "application.prepared"
   applicationId: string
   listingId: string
+  price: number | null
+  beds: number | null
+  distanceMinutes: number | null
+  addressText: string | null
+  amenities: string[]
   missingFields: string[]
-  screenshotPath: string | null
+  screenshotUrl: string | null
   solariSessionId: string
 }
 

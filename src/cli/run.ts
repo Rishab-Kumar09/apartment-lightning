@@ -1,10 +1,9 @@
 import { migrate } from "../db/migrate.ts"
 import { startServer } from "../server.ts"
-import { config } from "../config.ts"
 import { startFixtureSite } from "../seed/fixtureSite/server.ts"
 import { triggerSeedListing, resetSeedFixture } from "../seed/seedTrigger.ts"
-import { fixtureAdapter } from "../watchers/adapters/fixture.ts"
 import { runPollCycle, startPolling } from "../watchers/registry.ts"
+import { getFixtureSource } from "../sources.ts"
 import { getLatestSearch, insertSearch } from "../db/repositories/searches.ts"
 import { closeSolari } from "../solari/client.ts"
 import type { SearchCriteria } from "../preferences/types.ts"
@@ -38,11 +37,7 @@ async function main() {
   startServer()
   startFixtureSite()
 
-  const fixtureSource = {
-    adapter: fixtureAdapter,
-    targetUrl: `http://localhost:${config.fixtureSitePort}/listings`,
-    pollIntervalMs: 5000,
-  }
+  const fixtureSource = getFixtureSource()
 
   if (args.has("--seed")) {
     if (args.has("--reset")) resetSeedFixture()

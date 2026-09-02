@@ -48,3 +48,13 @@ export function insertListing(input: InsertListingInput): string {
   )
   return id
 }
+
+export interface ListingRow {
+  id: string
+  applyUrl: string | null
+}
+
+export function getListing(listingId: string): ListingRow | null {
+  const row = db.prepare(`SELECT id, apply_url FROM listings WHERE id = ?`).get(listingId) as any
+  return row ? { id: row.id, applyUrl: row.apply_url } : null
+}
