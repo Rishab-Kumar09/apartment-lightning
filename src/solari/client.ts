@@ -10,17 +10,28 @@ import { config } from "../config.ts"
 export interface LocatorLike {
   all(): Promise<LocatorLike[]>
   first(): LocatorLike
+  locator(selector: string): LocatorLike
   getAttribute(name: string): Promise<string | null>
   innerText(): Promise<string>
   fill(value: string): Promise<void>
   click(): Promise<void>
 }
 
+export interface RouteLike {
+  abort(): Promise<void>
+}
+
 export interface PageLike {
-  goto(url: string): Promise<unknown>
+  goto(url: string, opts?: { waitUntil?: "load" | "domcontentloaded" | "networkidle" }): Promise<unknown>
   locator(selector: string): LocatorLike
   screenshot(opts: { path: string }): Promise<unknown>
   context(): { storageState(): Promise<unknown> }
+  route(pattern: string, handler: (route: RouteLike) => unknown): Promise<unknown>
+  // Runs fn in the page's own JS context. Real adapters should prefer this
+  // over many individual locator round-trips — one evaluate() replaces
+  // dozens of CDP calls, which matters both for speed and for not crashing
+  // the browser scraping image/DOM-heavy real listing pages.
+  evaluate<T>(fn: () => T): Promise<T>
 }
 
 // The seam between this codebase and Solari's cloud service. Real vs mock is

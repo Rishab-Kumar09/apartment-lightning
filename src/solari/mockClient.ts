@@ -28,7 +28,12 @@ export class MockSolariAdapter implements SolariAdapter {
   private profileStates = new Map<string, unknown>()
 
   async launch(opts?: LaunchOpts): Promise<SolariBrowserSession> {
-    const browser = await chromium.launch({ headless: true })
+    // --disable-dev-shm-usage / --disable-gpu avoid renderer crashes seen in
+    // resource-constrained sandboxes when scraping image-heavy real pages.
+    const browser = await chromium.launch({
+      headless: true,
+      args: ["--disable-dev-shm-usage", "--disable-gpu", "--no-sandbox"],
+    })
     const state = opts?.profileId ? this.profileStates.get(opts.profileId) : undefined
     // Pre-create a context with saved storage state, if any, so the session
     // "starts already logged in" the same way a real Solari profile would.
