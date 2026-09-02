@@ -12,6 +12,7 @@
     "seed": "tsx --env-file=.env src/cli/run.ts --seed",
     "seed:applicant": "tsx --env-file=.env scripts/seed-applicant.ts",
     "demo:reset": "tsx --env-file=.env scripts/demo-seed.ts --reset",
+    "watch:live": "tsx --env-file=.env scripts/watch-live.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --test --import tsx test/*.test.ts"
   },
