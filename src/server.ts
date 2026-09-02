@@ -11,9 +11,11 @@ import { runSubmitFlow } from "./application/submitFlow.ts"
 import { getSolari } from "./solari/client.ts"
 import { parseSearchQuery } from "./preferences/parser.ts"
 import type { SearchCriteria } from "./preferences/types.ts"
-import { triggerSeedListing } from "./seed/seedTrigger.ts"
+import { triggerSeedListing, resetSeedFixture } from "./seed/seedTrigger.ts"
 import { runPollCycle } from "./watchers/registry.ts"
 import { getFixtureSource } from "./sources.ts"
+import { clearActivity } from "./db/repositories/activity.ts"
+import fs from "node:fs"
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 
@@ -115,6 +117,20 @@ export function createServer() {
     } catch (err) {
       res.status(500).json({ error: String(err) })
     }
+  })
+
+  // Rehearsable demo reset: clears seeded listings/applications, the
+  // fixture site's in-memory listings, and old screenshots -- leaves
+  // searches/applicant profile alone. Lets you record the demo multiple
+  // times back to back without restarting the server.
+  app.post("/dev/reset", (_req, res) => {
+    clearActivity()
+    resetSeedFixture()
+    const screenshotsDir = path.join(here, "..", "screenshots")
+    if (fs.existsSync(screenshotsDir)) {
+      for (const file of fs.readdirSync(screenshotsDir)) fs.unlinkSync(path.join(screenshotsDir, file))
+    }
+    res.json({ ok: true })
   })
 
   return app

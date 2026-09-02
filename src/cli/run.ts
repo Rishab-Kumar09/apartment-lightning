@@ -2,6 +2,7 @@ import { migrate } from "../db/migrate.ts"
 import { startServer } from "../server.ts"
 import { startFixtureSite } from "../seed/fixtureSite/server.ts"
 import { triggerSeedListing, resetSeedFixture } from "../seed/seedTrigger.ts"
+import { clearActivity } from "../db/repositories/activity.ts"
 import { runPollCycle, startPolling } from "../watchers/registry.ts"
 import { getFixtureSource } from "../sources.ts"
 import { getLatestSearch, insertSearch } from "../db/repositories/searches.ts"
@@ -40,7 +41,10 @@ async function main() {
   const fixtureSource = getFixtureSource()
 
   if (args.has("--seed")) {
-    if (args.has("--reset")) resetSeedFixture()
+    if (args.has("--reset")) {
+      resetSeedFixture()
+      clearActivity()
+    }
     ensureDemoSearch()
     const listing = triggerSeedListing()
     console.log(`seeded listing #${listing.id} — running one poll cycle...`)
