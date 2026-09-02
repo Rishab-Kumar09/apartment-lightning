@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.123.0",
+    "@solarisdk/browser": "^0.1.2",
     "express": "^4.21.0",
     "playwright": "^1.48.0"
   },

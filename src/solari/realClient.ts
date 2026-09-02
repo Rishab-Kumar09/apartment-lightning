@@ -1,57 +1,40 @@
-import type { SolariAdapter, SolariBrowserSession, SolariProfile } from "./client.ts"
+import { Solari } from "@solarisdk/browser"
+import type { SolariAdapter, SolariBrowserSession, SolariProfile, LaunchOpts } from "./client.ts"
 
-// Thin wrapper around the real @solarisdk/browser SDK, matching the shape
-// confirmed from the cookbook (see solari/client.ts doc comment). Not
-// exercised until SOLARI_API_KEY is set — see src/config.ts useMockSolari.
+// Thin wrapper around the real @solarisdk/browser SDK. Not exercised until
+// SOLARI_API_KEY is set — see src/config.ts useMockSolari.
 export class RealSolariAdapter implements SolariAdapter {
   readonly isMock = false
-  private client: any
+  private client: Solari
 
   constructor(apiKey: string) {
-    // Dynamic import so this file has no hard dependency until it's actually
-    // used — keeps `npm install` and typecheck working before the SDK
-    // package is added in Phase 5.
-    this.clientReady = import("@solarisdk/browser").then(({ Solari }: any) => {
-      this.client = new Solari({ apiKey })
-    })
+    this.client = new Solari({ apiKey })
   }
 
-  private clientReady: Promise<void>
-
-  async launch(opts?: { profileId?: string; recording?: boolean }): Promise<SolariBrowserSession> {
-    await this.clientReady
-    const browser = await this.client.launch(opts)
+  async launch(opts?: LaunchOpts): Promise<SolariBrowserSession> {
+    const session = await this.client.launch(opts)
     return {
-      id: browser.id,
-      newPage: () => browser.newPage(),
-      close: () => browser.close(),
+      id: session.id,
+      newPage: () => session.newPage(),
+      close: () => session.close(),
     }
   }
 
   profiles = {
-    list: async (): Promise<SolariProfile[]> => {
-      await this.clientReady
-      return this.client.profiles.list()
-    },
-    create: async (opts: { name: string }): Promise<SolariProfile> => {
-      await this.clientReady
-      return this.client.profiles.create(opts)
-    },
-    save: async (profileId: string, state: unknown) => {
-      await this.clientReady
-      return this.client.profiles.save(profileId, state)
-    },
+    list: (): Promise<SolariProfile[]> => this.client.profiles.list(),
+    create: (opts: { name: string }): Promise<SolariProfile> => this.client.profiles.create(opts),
+    save: (profileId: string, state: unknown) =>
+      this.client.profiles.save(profileId, state as Parameters<Solari["profiles"]["save"]>[1]),
   }
 
   sessions = {
-    // Upload happens async after session release — first poll often 404s.
-    // Retry with backoff per the cookbook's documented behavior.
+    // getReplayUrl is available ~1-3s after releaseAndWait per the SDK's own
+    // docs — retry with backoff rather than treating an early 404 as final.
     downloadReplay: async (sessionId: string): Promise<Uint8Array | null> => {
-      await this.clientReady
       for (let attempt = 1; attempt <= 10; attempt++) {
         await new Promise((r) => setTimeout(r, 3000))
         try {
-          return await this.client.sessions.download_replay(sessionId)
+          return await this.client.sessions.downloadReplay(sessionId)
         } catch (err: any) {
           if (err?.status !== 404) throw err
         }
@@ -61,7 +44,6 @@ export class RealSolariAdapter implements SolariAdapter {
   }
 
   async close() {
-    await this.clientReady
     await this.client.close()
   }
 }

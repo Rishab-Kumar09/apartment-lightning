@@ -1,11 +1,33 @@
-import type { Page, BrowserContext } from "playwright"
 import { config } from "../config.ts"
+
+// The only browser surface this codebase actually uses. Deliberately a
+// minimal structural interface rather than importing Playwright's `Page`
+// type directly: the mock client hands back a real `playwright` Page while
+// the real Solari client hands back a `patchright-core` Page (a Playwright
+// fork) — the two packages' Page types are structurally near-identical at
+// runtime but not nominally assignable to each other in TS. Depending on
+// this narrow slice keeps both satisfying the interface without a cast.
+export interface LocatorLike {
+  all(): Promise<LocatorLike[]>
+  first(): LocatorLike
+  getAttribute(name: string): Promise<string | null>
+  innerText(): Promise<string>
+  fill(value: string): Promise<void>
+  click(): Promise<void>
+}
+
+export interface PageLike {
+  goto(url: string): Promise<unknown>
+  locator(selector: string): LocatorLike
+  screenshot(opts: { path: string }): Promise<unknown>
+  context(): { storageState(): Promise<unknown> }
+}
 
 // The seam between this codebase and Solari's cloud service. Real vs mock is
 // selected once here; every other module only ever imports this interface.
 export interface SolariBrowserSession {
   id: string
-  newPage(): Promise<Page>
+  newPage(): Promise<PageLike>
   close(): Promise<void>
 }
 
@@ -14,9 +36,20 @@ export interface SolariProfile {
   name: string
 }
 
+export interface LaunchOpts {
+  profileId?: string
+  recording?: boolean
+  // Real-site adapters (Phase 6) opt into these; the mock client ignores
+  // them since there's no real bot detection to defeat against a local
+  // fixture site.
+  stealth?: boolean
+  captcha?: boolean
+  proxy?: string
+}
+
 export interface SolariAdapter {
   readonly isMock: boolean
-  launch(opts?: { profileId?: string; recording?: boolean }): Promise<SolariBrowserSession>
+  launch(opts?: LaunchOpts): Promise<SolariBrowserSession>
   profiles: {
     list(): Promise<SolariProfile[]>
     create(opts: { name: string }): Promise<SolariProfile>
@@ -27,9 +60,6 @@ export interface SolariAdapter {
   }
   close(): Promise<void>
 }
-
-// Only exported for type reuse in mock/real implementations.
-export type { BrowserContext }
 
 let cached: SolariAdapter | null = null
 

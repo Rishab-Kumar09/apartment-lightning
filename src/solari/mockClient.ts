@@ -1,6 +1,6 @@
 import { chromium, type Browser } from "playwright"
 import crypto from "node:crypto"
-import type { SolariAdapter, SolariBrowserSession, SolariProfile } from "./client.ts"
+import type { SolariAdapter, SolariBrowserSession, SolariProfile, LaunchOpts } from "./client.ts"
 
 // Mocks the Solari CLOUD SERVICE only (profile persistence, session
 // recording/replay). newPage() still returns a real, locally-launched
@@ -27,7 +27,7 @@ export class MockSolariAdapter implements SolariAdapter {
   private profileList = new Map<string, SolariProfile>()
   private profileStates = new Map<string, unknown>()
 
-  async launch(opts?: { profileId?: string; recording?: boolean }): Promise<SolariBrowserSession> {
+  async launch(opts?: LaunchOpts): Promise<SolariBrowserSession> {
     const browser = await chromium.launch({ headless: true })
     const state = opts?.profileId ? this.profileStates.get(opts.profileId) : undefined
     // Pre-create a context with saved storage state, if any, so the session
